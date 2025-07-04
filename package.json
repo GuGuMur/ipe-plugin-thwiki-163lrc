@@ -3,19 +3,44 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite build --watch",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
+    "@rollup/plugin-alias": "^5.1.1",
+    "@types/css-modules": "^1.0.5",
     "@types/jquery": "^3.5.32",
     "@types/node": "^24.0.7",
+    "@types/react": "^19.1.8",
+    "@unocss/preset-wind3": "^66.3.2",
+    "@unocss/reset": "^66.3.2",
     "terser": "^5.43.1",
+    "types-mediawiki": "^1.10.1",
     "typescript": "~5.8.3",
+    "unocss": "^66.3.2",
+    "unocss-preset-animations": "^1.2.1",
+    "unocss-preset-shadcn": "^0.5.0",
     "vite": "^7.0.0",
+    "vite-live-preview": "^0.3.2",
     "vite-plugin-banner": "^0.8.1",
-    "types-mediawiki": "^1.10.1"
+    "vue": "3.4.37"
   },
   "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.14",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-hover-card": "^1.1.14",
+    "@radix-ui/react-popover": "^1.1.14",
+    "@radix-ui/react-radio-group": "^1.3.7",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-toast": "^1.2.14",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.525.0",
+    "preact": "^10.26.9",
+    "tailwind-merge": "^3.3.1"
   }
 }
