@@ -319,7 +319,7 @@ const triggerIPE = async () => {
       editText: text,
       editSummary:
         "//Powered by InPageEdit and [[用户:咕咕mur/ipe-plugin-thwiki-163lrc|163LRC Plugin]]",
-      reload: false,
+      // reload: false,
     });
     $("#editSummary").val(
       "//Powered by InPageEdit and [[用户:咕咕mur/ipe-plugin-thwiki-163lrc|163LRC Plugin]]"
