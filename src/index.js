@@ -6,9 +6,8 @@ import "@/style.module.css";
 import "virtual:uno.css";
 
 
-
 mw.hook("InPageEdit").add(() => {
-  // CD页面 给每个红链加
+  // CD页面 给每个红链加，同时调span的样式，防止断行
   $('span.new[title="（歌词页面不存在）"]').each(function () {
     this.style.setProperty("display", "inline-flex", "important");
     const $firstA = $(this).find("a:first");
@@ -21,8 +20,7 @@ mw.hook("InPageEdit").add(() => {
     console.log(`[163LRC]: 为 ${songName} 创建编辑入口成功！`);
   });
 
-  
-  // 歌词页面标题加
+  // 歌词页面：在标题里加，保证h1里面的线不被截断
   const pageTitle = mw.config.get('wgPageName')
   if (pageTitle.startsWith("歌词")) {
     const songName = mw.config.get("wgTitle")

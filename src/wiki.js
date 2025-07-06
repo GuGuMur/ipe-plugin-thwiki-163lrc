@@ -50,7 +50,7 @@ function parseSingleLrc(lrcStr) {
             result.push({
                 time: timeObj.raw,
                 timeInSec: timeObj.seconds,
-                lrc: text || '',
+                lrc: text.replace(/\s+/g, ' ').trim() || '',
                 rawLine: line
             });
         }

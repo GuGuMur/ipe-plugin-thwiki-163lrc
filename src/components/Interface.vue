@@ -45,7 +45,7 @@
           <n-space
             :wrap="false"
             align="center"
-            class="w-full flex">
+            class="w-90vh flex">
             <n-input
               :value="searchKeyword"
               :placeholder="props.songName"
@@ -88,14 +88,14 @@
                     v-for="song in searchResults"
                     :key="song.id"
                     :value="song"
-                    class="w-screen">
+                    class="w-90vh">
                     <n-popover
                       trigger="hover"
                       class="max-h-40 max-w-xl"
                       scrollable>
                       <template #trigger>
                         <n-card
-                          class="transition-all duration-200 hover:shadow-md w-70vw"
+                          class="transition-all duration-200 hover:shadow-md"
                           @click="selectedSong = song"
                           :bordered="false">
                           <div
@@ -310,52 +310,50 @@ const handleConfirm = () => {
   showLangSelect.value = true;
 };
 const triggerIPE = async () => {
-  const lrcs = await lyricsCache.getLyrics(selectedSong.value?.id);
-  const text = Lrc2WikiTemplate(selectedLang.value, lrcs);
-  console.log(text);
-  await Promise.resolve(
+  try {
+    const lrcs = await lyricsCache.getLyrics(selectedSong.value?.id);
+    const text = Lrc2WikiTemplate(selectedLang.value, lrcs);
+    console.log(text);
     InPageEdit.quickEdit({
       page: props.pageTitle,
       editText: text,
       editSummary:
         "//Powered by InPageEdit and [[用户:咕咕mur/ipe-plugin-thwiki-163lrc|163LRC Plugin]]",
       reload: false,
-    })
-  )
-    .then(() => {
-      ssi_modal.notify("success", {
-        className: "in-page-edit",
-        title: "163LRC（3 / 3）完成！",
-        content: "记得检查，被找麻烦不管（",
-      });
-    })
-    .then(async () => {
+    });
+    $("#editSummary").val(
+      "//Powered by InPageEdit and [[用户:咕咕mur/ipe-plugin-thwiki-163lrc|163LRC Plugin]]"
+    );
+    $(".editArea").val(text);
+    notification.success({
+      title: "163LRC（3 / 3）完成！",
+      description: "你先别急，我也很急",
+      content:
+        "由于IPE功能限制，编辑区域可能需要5s左右同步wikitext，若未能及时同步请在控制台中复制粘贴生成的文本或重新进行一遍插件的流程，相关提示未出现前建议不要编辑不要提交。",
+    });
+    // 临时操作一下
+
+    setTimeout(() => {
       $("#editSummary").val(
         "//Powered by InPageEdit and [[用户:咕咕mur/ipe-plugin-thwiki-163lrc|163LRC Plugin]]"
       );
-      InPageEdit.progress(true);
-      setTimeout(() => {
-        InPageEdit.progress(false);
-      }, 1000);
-      const observer = new MutationObserver((mutations) => {
-        const textarea = document.querySelector(".editArea");
-        if (textarea) {
-          textarea.value = text;
-          observer.disconnect();
-        }
-      });
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
       $(".editArea").val(text);
-    })
 
-    .catch((err) => {
-      notification.warning({
-        title: "自动编辑失败",
-        description: err,
+      notification.success({
+        title: "延时操作（3.5 / 3）完成！",
+        description: () =>
+          h("div", null, [
+            "感谢包容，",
+            h("del", null, "这IPE怎么这么坏啊"),
+            "，下一个版本说不定就好了呢（）",
+          ]),
       });
+    }, 5000);
+  } catch (err) {
+    notification.warning({
+      title: "自动编辑失败",
+      description: err,
     });
+  }
 };
 </script>
