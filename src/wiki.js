@@ -12,22 +12,53 @@ function langcode2lang(langcode) {
 }
 
 function parseSingleLrc(lrcStr) {
-    const timeReg = /\[(\d{1,2}:\d{1,2}(?:\.\d{1,3})?)\]/g;
-    let result = [];
-    if (!lrcStr) return result;
+    const timeReg = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
+    const result = [];
+
+    if (!lrcStr || typeof lrcStr !== 'string') {
+        return result;
+    }
+
     const lines = lrcStr.split('\n');
-    for (let line of lines) {
-        let times = [];
-        line.replace(timeReg, function (_, time) {
-            times.push(time);
-            return '';
-        });
-        const text = line.replace(timeReg, '').trim();
-        if (!text && !times.length) continue;
-        for (let t of times) {
-            result.push({ time: t, lrc: text });
+
+    for (const line of lines) {
+        if (!line.trim()) continue;
+
+        const times = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = timeReg.exec(line)) !== null) {
+            const [fullMatch, minutes, seconds, milliseconds] = match;
+            const timeInSec = parseFloat(minutes) * 60 +
+                parseFloat(seconds) +
+                parseFloat(milliseconds.padEnd(3, '0')) / 1000;
+
+            times.push({
+                raw: `${minutes}:${seconds}.${milliseconds.padEnd(3, '0')}`,
+                seconds: timeInSec
+            });
+            lastIndex = match.index + fullMatch.length;
+        }
+
+        // 提取歌词文本
+        const text = line.slice(lastIndex).trim();
+        if (!text && times.length === 0) continue;
+
+        // 为每个时间标签创建条目
+        for (const timeObj of times) {
+            result.push({
+                time: timeObj.raw,
+                timeInSec: timeObj.seconds,
+                lrc: text || '',
+                rawLine: line
+            });
         }
     }
+
+    // 按时间排序
+    result.sort((a, b) => a.timeInSec - b.timeInSec);
+
     return result;
 }
 
@@ -75,7 +106,7 @@ export default function Lrc2WikiTemplate(lang, lrcs) {
     if (!lrcs?.lrc?.lyric) {
         return `自己关了 要不自己写`
     }
-    else if (lrcs?.lrc?.lyric && lrcs?.tlyric.lyric) {
+    else if (lrcs?.lrc?.lyric && lrcs?.tlyric?.lyric) {
         return (
             `
 __LYRICS__
@@ -83,7 +114,7 @@ __LYRICS__
 {{歌词信息|
 | 语言 = ${langcode2lang(lang)}
 | 翻译 = 中文
-| 译者 = [https://music.163.com/#/user/home?id=${lrcs?.transUser?.id} ${lrcs?.transUser?.nickname}]@网易云音乐
+| 译者 = [https://music.163.com/#/user/home?id=${lrcs?.transUser?.userid} ${lrcs?.transUser?.nickname}]@网易云音乐
 }}
 
 lyrics=

@@ -16,6 +16,7 @@ pnpm run dev
 
 在控制台/你的`common.js`页面中添加 
 ```javascript
+mw.loader.load("https://unpkg.com/mediawiki-inpageedit");
 mw.loader.load("http://localhost:3000/main.js");
 // 每次重载时刷新页面
 ```

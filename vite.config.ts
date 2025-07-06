@@ -1,26 +1,24 @@
 import { defineConfig } from "vite";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import livePreview from 'vite-live-preview'
-import UnoCSS from 'unocss/vite'
-import Preact from '@preact/preset-vite'
-import alias from '@rollup/plugin-alias';
+import livePreview from "vite-live-preview";
+import UnoCSS from "unocss/vite";
+import vue from "@vitejs/plugin-vue";
+import alias from "@rollup/plugin-alias";
+// import transformerCompileClass from "@unocss/transformer-compile-class";
 
 const BASE_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(() => ({
   plugins: [
     livePreview(),
     UnoCSS(),
-    Preact(),
+    // tailwindcss(),
+    // Preact(),
+    vue(),
     alias({
-			entries: [
-				{ find: 'react', replacement: 'preact/compat' },
-				{ find: 'react-dom/test-utils', replacement: 'preact/test-utils' },
-				{ find: 'react-dom', replacement: 'preact/compat' },
-				{ find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' }
-			]
-		}),
+      entries: [],
+    }),
     {
       name: "add-CSS",
       apply: "build",
@@ -38,30 +36,36 @@ export default defineConfig(({ command }) => ({
         Object.keys(bundle).forEach((fileName) => {
           const chunk = bundle[fileName];
           if (chunk.type === "chunk" && chunk.isEntry) {
-              chunk.code = chunk.code.trim();
-              chunk.code += `!function(){mw.util.addCSS(\`${cssContent.trim()}\`);}();`;
+            chunk.code = chunk.code.trim();
+            chunk.code += `!function(){mw.util.addCSS(\`${cssContent.trim()}\`);}();`;
           }
         });
       },
     },
   ],
+  rules: {
+    // "@unocss/enforce-class-compile": "warn",
+  },
   build: {
     outDir: "dist",
     sourcemap: false,
     rollupOptions: {
-      input: "src/index.tsx",
+      input: "src/index.js",
       output: {
         entryFileNames: "main.js",
         format: "iife",
         name: "IPEPlugin",
         assetFileNames: "[name].[ext]",
       },
-      external: ["mw", "$", "ssi_modal"],
+      external: ["mw", "$", "ssi_modal", "InPageEdit"],
     },
-    minify: command === "build" ? "terser" : false,
+    minify: "terser",
     terserOptions: {
       mangle: {
-        reserved: ["mw", "$", "ssi_modal"],
+        reserved: ["mw", "$", "ssi_modal", "InPageEdit"],
+      },
+      format: {
+        comments: false,
       },
     },
     cssCodeSplit: false,

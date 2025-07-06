@@ -27,13 +27,15 @@
       "react": ["./node_modules/preact/compat/"],
       "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
       "react-dom": ["./node_modules/preact/compat/"],
-      "react-dom/*": ["./node_modules/preact/compat/*"]
+      "react-dom/*": ["./node_modules/preact/compat/*"],
+      "InPageEdit": ["./node_modules/mediawiki-inpageedit/dist"]
     }
   },
   "include": [
     "./src",
     "./node_modules/types-mediawiki",
-    "vite.config.ts"
+    "vite.config.ts",
+    "./node_modules/mediawiki-inpageedit/dist"
   ],
   "exclude": [
     "dist"
