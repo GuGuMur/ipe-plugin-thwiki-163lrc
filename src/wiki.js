@@ -102,7 +102,7 @@ zh=${item?.translation}
     ).trim()
 }
 
-export default function Lrc2WikiTemplate(lang, lrcs) {
+export function Lrc2WikiTemplate(lang, lrcs) {
     if (!lrcs?.lrc?.lyric) {
         return `自己关了 要不自己写`
     }
@@ -142,4 +142,38 @@ ${lrc2TemplateParams(lang, lrcs?.lrc?.lyric, lrcs?.tlyric?.lyric)}
 `
         ).trim()
     }
+}
+
+export function LrcArray2WikiTemplate(lang, selectedSongs, lrcsArray) {
+    let tabberContent = '';
+
+    lrcsArray.forEach((lrcItem, index) => {
+        const songName = selectedSongs[index]?.name;
+        const translatorNote = lrcItem?.transUser?.userid
+            ? `翻译者：[https://music.163.com/#/user/home?id=${lrcItem?.transUser?.userid} ${lrcItem?.transUser?.nickname}]@网易云音乐`
+            : '';
+
+        tabberContent += `${index > 0 ? '\n|-|' : ''}
+${songName}=
+xx
+${translatorNote}
+lyrics=
+
+${lrc2TemplateParams(lang, lrcItem?.lrc?.lyric, lrcItem?.tlyric?.lyric)}
+xx`;
+    });
+
+    return `__LYRICS__
+
+{{歌词信息|
+| 语言 = ${langcode2lang(lang)}
+| 翻译 = 中文
+| 译者 = 
+}}
+
+xx
+<tabber>
+${tabberContent}
+</tabber>
+xx`;
 }

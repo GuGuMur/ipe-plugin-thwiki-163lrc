@@ -67,6 +67,7 @@
               <Search28Filled v-else />
               {{ loading ? "搜索中" : "搜索" }}
             </n-button>
+            <n-p> 你选中了 {{ selectedSongs.length }} 首歌曲。 </n-p>
           </n-space>
           <div class="overflow-y-auto max-h-40vh space-y-3 w-full">
             <!-- 搜索结果列表 -->
@@ -79,83 +80,17 @@
               </div>
             </template>
             <template v-else-if="searchResults.length > 0">
-              <n-radio-group
-                v-model:value="selectedSong"
-                name="radioSongs"
-                size="large">
-                <n-space vertical>
-                  <n-radio-button
-                    v-for="song in searchResults"
-                    :key="song.id"
-                    :value="song"
-                    class="w-90vh">
-                    <n-popover
-                      trigger="hover"
-                      class="max-h-40 max-w-xl"
-                      scrollable>
-                      <template #trigger>
-                        <n-card
-                          class="transition-all duration-200 hover:shadow-md"
-                          @click="selectedSong = song"
-                          :bordered="false">
-                          <div
-                            class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                              <img
-                                :src="
-                                  song?.al?.picUrl.replace(
-                                    'http://',
-                                    'https://'
-                                  )
-                                "
-                                :alt="song?.name"
-                                class="w-12 h-12 rounded shadow object-cover"
-                                style="
-                                  min-width: 50px;
-                                  min-height: 50px;
-                                " />
-                              <n-space vertical>
-                                <n-text
-                                  class="text-base font-medium"
-                                  >{{ song.name }}</n-text
-                                >
-                                <n-text
-                                  type="secondary"
-                                  class="text-sm">
-                                  {{
-                                    song?.ar
-                                      ?.map((item) => item.name)
-                                      .join("&")
-                                  }}
-                                  • {{ song?.al?.name }}
-                                </n-text>
-                              </n-space>
-                            </div>
-                            <div class="flex items-center gap-4">
-                              <a
-                                :href="`https://music.163.com/#/song?id=${song?.id}`"
-                                target="_blank">
-                                <n-tag
-                                  type="error"
-                                  class="text-xs"
-                                  round
-                                  :bordered="true">
-                                  <template #avatar>
-                                    <MusicNote2Play20Regular
-                                      class="w-4 h-4 mr-1"></MusicNote2Play20Regular>
-                                  </template>
-                                  到网易云音乐
-                                </n-tag>
-                              </a>
-                            </div>
-                          </div>
-                        </n-card>
-                      </template>
-                      <LyricPreview :id="song?.id"></LyricPreview>
-                    </n-popover>
-                  </n-radio-button>
-                </n-space>
-              </n-radio-group>
+              <n-data-table
+                :columns="tableColumns"
+                :data="searchResults"
+                :pagination="{
+                  pageSize: 5,
+                  showSizePicker: true,
+                  pageSizes: [5, 10, 20],
+                  showQuickJumper: true,
+                }"
+                :row-key="(row) => row"
+                @update:checked-row-keys="tableCheck" />
             </template>
             <template v-else-if="searchResults">
               <div
@@ -225,7 +160,10 @@ import {
   NPopover,
   NSpace,
   useMessage,
+  useModal,
   useNotification,
+  NP,
+  NDataTable,
 } from "naive-ui";
 import _ from "lodash";
 import {
@@ -237,8 +175,9 @@ import {
 } from "@vicons/fluent";
 import { ref, defineProps, h } from "vue";
 import LyricPreview from "./LyricPreview.vue";
-import Lrc2WikiTemplate from "../wiki";
+import { Lrc2WikiTemplate, LrcArray2WikiTemplate } from "../wiki";
 import { useLyricsCache } from "@/stores/LyricsCache.js";
+
 const props = defineProps({
   songName: {
     type: String,
@@ -255,10 +194,11 @@ const showLangSelect = ref(false);
 const searchKeyword = ref(props.songName);
 const searchResults = ref([]);
 const loading = ref(false);
-const selectedSong = ref({});
+const selectedSongs = ref([]);
 const selectedLang = ref("ja");
 const lyricsCache = useLyricsCache();
 // const message = useMessage();
+const modal = useModal();
 const notification = useNotification();
 const pendingLyrics = {};
 const langs = ["zh", "en", "ja", "自己文字替换啊啊啊"];
@@ -303,7 +243,7 @@ const handleSearchClick = () => {
 };
 
 const handleSongSelect = (song) => {
-  selectedSong.value = song;
+  selectedSongs.value = song;
 };
 const handleConfirm = () => {
   showModal.value = false;
@@ -311,9 +251,28 @@ const handleConfirm = () => {
 };
 const triggerIPE = async () => {
   try {
-    const lrcs = await lyricsCache.getLyrics(selectedSong.value?.id);
-    const text = Lrc2WikiTemplate(selectedLang.value, lrcs);
+    // const lrcPromises = selectedSongs.value.map((item) =>
+    //   lyricsCache.getLyrics(item?.id)
+    // );
+    // const lrcs = await Promise.all(lrcPromises);
+    InPageEdit.progress("正在获取文本......")
+    const lrcs = [];
+    for (const item of selectedSongs.value) {
+      const lyric = await lyricsCache.getLyrics(item?.id);
+      lrcs.push(lyric);
+    }
+    let text = "";
+    if (lrcs.length == 1) {
+      text = Lrc2WikiTemplate(
+        selectedLang.value,
+        lrcs[0]
+      );
+    } else {
+      text = LrcArray2WikiTemplate(selectedLang.value, selectedSongs.value, lrcs);
+    }
     console.log(text);
+    InPageEdit.progress(true)
+    InPageEdit.progress(false)
     InPageEdit.quickEdit({
       page: props.pageTitle,
       editText: text,
@@ -354,6 +313,91 @@ const triggerIPE = async () => {
       title: "自动编辑失败",
       description: err,
     });
+  } finally {
+    selectedSongs.value = []
   }
+};
+
+function createTableColumns() {
+  return [
+    {
+      type: "selection",
+    },
+    {
+      title: "封面",
+      key: "al.picUrl",
+      render(row) {
+        const url = row.al.picUrl.replace("http://", "https://");
+        return h("img", {
+          src: url,
+          alt: row.name,
+          class: "w-12 h-12 rounded shadow object-cover",
+          style: "min-width: 50px; min-height: 50px",
+        });
+      },
+    },
+    {
+      title: "曲名",
+      key: "name",
+      render(row) {
+        return h("span", row?.name);
+      },
+    },
+    {
+      title: "歌手",
+      key: "ar",
+      render(row) {
+        return h("span", row.ar.map((a) => a.name).join("&"));
+      },
+    },
+    {
+      title: "专辑",
+      key: "alname",
+      render(row) {
+        return h("span", row.al?.name);
+      },
+    },
+    {
+      title: "歌词",
+      key: "id",
+      render(row) {
+        return h(
+          NButton,
+          {
+            type: "primary",
+            size: "small",
+            onClick: () => {
+              const m = modal.create({
+                title: `歌词预览——${row.name}（${row.ar
+                  .map((a) => a.name)
+                  .join("&")}，${row.al?.name}）`,
+                preset: "card",
+                style: {
+                  width: "600px",
+                  height: "500px",
+                  overflow: "auto",
+                },
+                content: h(LyricPreview, {
+                  id: row.id,
+                }),
+                footer: () =>
+                  h(
+                    NButton,
+                    { type: "primary", onClick: () => m.destroy() },
+                    () => "关闭"
+                  ),
+              });
+              return m;
+            },
+          },
+          { default: () => "歌词预览" }
+        );
+      },
+    },
+  ];
+}
+const tableColumns = createTableColumns();
+const tableCheck = (rowKeys) => {
+  selectedSongs.value = rowKeys;
 };
 </script>

@@ -5,7 +5,6 @@ import { createPinia } from 'pinia'
 import "@/style.module.css";
 import "virtual:uno.css";
 
-
 mw.hook("InPageEdit").add(() => {
   // CD页面 给每个红链加，同时调span的样式，防止断行
   $('span.new[title="（歌词页面不存在）"]').each(function () {
@@ -34,5 +33,4 @@ mw.hook("InPageEdit").add(() => {
     })
   }
   console.log("[InPageEdit] 插件 thbwiki-163lrc 加载成功");
-
 })

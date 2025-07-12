@@ -6,7 +6,7 @@
     class="mb-4">
     暂无歌词
   </n-alert>
-  <n-space vertical v-else>
+  <n-space vertical v-else class="overflow-auto">
     <n-text strong>原文歌词</n-text>
     <n-text
       depth="3"
